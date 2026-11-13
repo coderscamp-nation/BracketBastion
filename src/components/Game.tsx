@@ -16,7 +16,20 @@ import {
 } from '../game/config';
 import { Engine, type Hud as HudState, type Result } from '../game/engine';
 import { Renderer } from '../game/render';
-import { getDifficulty, getUnlocked, loadScores, renameScore, saveRun, setDifficulty, unlockStage, type ScoreEntry } from '../game/storage';
+import {
+  getDifficulty,
+  getUnlocked,
+  getUnlockedFor,
+  getWavesBeat,
+  loadScores,
+  recordStageLoss,
+  recordWaveCleared,
+  renameScore,
+  saveRun,
+  setDifficulty,
+  unlockStageFor,
+  type ScoreEntry,
+} from '../game/storage';
 import { cn } from '../utils/cn';
 import Dock from './Dock';
 import Hud from './Hud';
@@ -48,7 +61,7 @@ const MAX_SPEED = 4;
 
 const initialUnlocked = () => {
   const test = maxUnlockedStageIndex();
-  return test >= 0 ? test : Math.min(getUnlocked(), lastStage);
+  return test >= 0 ? test : Math.min(getUnlockedFor(getDifficulty()), lastStage);
 };
 
 /** Demo unlocks every stage but should not default the picker to stage 20 (perk gate + confusing start). */
@@ -178,6 +191,9 @@ export default function Game() {
     sfx.play('select');
     setDifficulty(level);
     setDiff(level);
+    const u = Math.min(getUnlockedFor(level), lastStage);
+    setUnlocked(u);
+    setStageSel((s) => Math.min(s, u));
   }, []);
 
   const quit = useCallback(() => {
@@ -186,7 +202,9 @@ export default function Game() {
     window.clearTimeout(endTimer.current);
     music.stop();
     // come back to the title on the furthest sheet available, ready to continue
-    const sel = Math.min(Math.max(run.current.stage, getUnlocked()), lastStage);
+    const u = getUnlockedFor(run.current.diff);
+    setUnlocked(u);
+    const sel = Math.min(Math.max(run.current.stage, u), lastStage);
     g.reset(true, sel);
     applyTheme(sel);
     setStageSel(sel);
@@ -333,12 +351,18 @@ export default function Game() {
       if (name === 'leak') buzz(70);
       else if (name === 'boom') buzz(35);
     };
+    engine.onWaveCleared = (waveNumber, total) => {
+      if (engine.attract) return;
+      recordWaveCleared(run.current.diff, run.current.stage, waveNumber, total);
+    };
     engine.onEnd = (r) => {
       const saved = saveRun(run.current.id, { score: r.score, wave: r.wave, won: r.won, perfect: r.perfect, stage: r.stage + 1, diff: r.diff });
       run.current.id = saved.entry.id;
       setEntry(saved.entry);
       setScores(saved.list);
-      if (r.won && !r.final) setUnlocked(Math.min(unlockStage(r.stage + 1), lastStage));
+      if (r.won) {
+        if (!r.final) setUnlocked(Math.min(unlockStageFor(r.diff, r.stage + 1), lastStage));
+      } else recordStageLoss(r.diff, r.stage, r.wave);
       music.stop();
       buzz(r.won ? [40, 60, 40, 60, 140] : 320);
       endTimer.current = window.setTimeout(() => {
@@ -682,6 +706,7 @@ export default function Game() {
           onMusic={toggleMusic}
           onInfo={openInfo}
           onStart={startSelected}
+          wavesBeat={getWavesBeat(diff, stageSel)}
         />
       )}
       {mode === 'play' && paused && !result && !info && (

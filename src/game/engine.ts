@@ -307,6 +307,8 @@ export class Engine {
 
   sfx: (name: string) => void = () => {};
   onEnd: (r: Result) => void = () => {};
+  /** Fired after each wave is cleared (1-based wave number, total in stage). */
+  onWaveCleared: (waveNumber: number, totalWaves: number) => void = () => {};
 
   private nextId = 1;
   private spawnN = 0;
@@ -1110,6 +1112,8 @@ export class Engine {
       this.vault -= liquidity;
       this.gold += liquidity;
     }
+    if (!this.attract) this.onWaveCleared(n, this.waves.length);
+
     const totalCash = bonus + liquidity;
     if (totalCash > 0) {
       this.floater(

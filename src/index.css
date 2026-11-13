@@ -495,6 +495,26 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+  .stage-waves {
+    display: flex;
+    gap: 3px;
+    margin-top: 8px;
+    flex-wrap: nowrap;
+  }
+  .stage-wave-pip {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 4px;
+    border-radius: 1px;
+    background: rgba(234, 244, 255, 0.22);
+  }
+  .stage-wave-pip.is-done {
+    background: var(--color-mint);
+  }
+  .stage-wave-pip.is-next {
+    background: var(--color-cash);
+    box-shadow: 0 0 6px rgb(var(--glow) / 0.45);
+  }
   /* stage picker + difficulty: stacked, or side by side on short (landscape phone) screens */
   .pick-row {
     display: flex;

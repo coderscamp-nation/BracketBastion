@@ -19,8 +19,69 @@ export interface ScoreEntry {
 const KEY = 'bracket-bastion.scores.v1';
 const NAME_KEY = 'bracket-bastion.name';
 const STAGE_KEY = 'bracket-bastion.unlocked';
+const PROGRESS_KEY = 'bracket-bastion.progress.v1';
 const DIFF_KEY = 'bracket-bastion.difficulty';
 const MAX = 8;
+
+interface DiffProgress {
+  /** Highest 0-based stage index selectable on the title picker. */
+  unlocked: number;
+  /** Per stage: highest wave fully cleared (1–10). */
+  waves: Record<number, number>;
+}
+
+interface CampaignProgress {
+  byDiff: Record<Difficulty, DiffProgress>;
+}
+
+function emptyDiffProgress(): DiffProgress {
+  return { unlocked: 0, waves: {} };
+}
+
+function readProgress(): CampaignProgress {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw) {
+      const p = JSON.parse(raw) as CampaignProgress;
+      if (p?.byDiff) {
+        for (const d of ['easy', 'normal', 'hard'] as Difficulty[]) {
+          p.byDiff[d] ??= emptyDiffProgress();
+          p.byDiff[d].waves ??= {};
+        }
+        return p;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  const legacy = getUnlockedLegacy();
+  const migrated: CampaignProgress = {
+    byDiff: {
+      easy: emptyDiffProgress(),
+      normal: { unlocked: legacy, waves: {} },
+      hard: emptyDiffProgress(),
+    },
+  };
+  writeProgress(migrated);
+  return migrated;
+}
+
+function writeProgress(p: CampaignProgress) {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+  } catch {
+    /* ignore */
+  }
+}
+
+function getUnlockedLegacy(): number {
+  try {
+    const n = Number(localStorage.getItem(STAGE_KEY));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
 
 function read(): ScoreEntry[] {
   try {
@@ -104,24 +165,83 @@ export function saveRun(id: string | null, run: Omit<ScoreEntry, 'id' | 'name' |
   return { entry, list: next };
 }
 
-/** Highest stage index (0-based) the player may start from. */
+/** Highest stage index (0-based) the player may start from (current difficulty in storage — prefer `getUnlockedFor`). */
 export function getUnlocked(): number {
+  return getUnlockedFor(getDifficulty());
+}
+
+/** Highest selectable stage for a difficulty (cached campaign progress). */
+export function getUnlockedFor(diff: Difficulty): number {
+  return readProgress().byDiff[diff].unlocked;
+}
+
+/** Waves fully cleared on a stage for this difficulty (0–10). */
+export function getWavesBeat(diff: Difficulty, stageIndex: number): number {
+  const w = readProgress().byDiff[diff].waves[stageIndex];
+  return typeof w === 'number' ? Math.max(0, Math.min(10, w)) : 0;
+}
+
+/** Indices of stages with at least one wave cleared (for quick browse). */
+export function getTouchedStages(diff: Difficulty): number[] {
+  const { unlocked, waves } = readProgress().byDiff[diff];
+  const set = new Set<number>();
+  for (let i = 0; i <= unlocked; i++) set.add(i);
+  for (const k of Object.keys(waves)) {
+    const i = Number(k);
+    if (Number.isFinite(i) && waves[i] > 0) set.add(i);
+  }
+  return [...set].sort((a, b) => a - b);
+}
+
+function setUnlockedFor(diff: Difficulty, index: number): number {
+  const p = readProgress();
+  const next = Math.max(p.byDiff[diff].unlocked, Math.max(0, index));
+  p.byDiff[diff].unlocked = next;
+  writeProgress(p);
   try {
-    const n = Number(localStorage.getItem(STAGE_KEY));
-    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    if (diff === 'normal') localStorage.setItem(STAGE_KEY, String(next));
   } catch {
-    return 0;
+    /* ignore */
+  }
+  return next;
+}
+
+/** Record a cleared wave (1-based wave number). Unlocks the next stage at 10/10. */
+export function recordWaveCleared(diff: Difficulty, stageIndex: number, waveNumber: number, totalWaves = 10) {
+  const p = readProgress();
+  const slot = p.byDiff[diff];
+  const prev = slot.waves[stageIndex] ?? 0;
+  const n = Math.max(prev, Math.min(totalWaves, waveNumber));
+  slot.waves[stageIndex] = n;
+  if (n >= totalWaves) slot.unlocked = Math.max(slot.unlocked, stageIndex + 1);
+  writeProgress(p);
+  if (diff === 'normal') {
+    try {
+      localStorage.setItem(STAGE_KEY, String(slot.unlocked));
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** On stage loss, remember how far they got (waves cleared = died on wave `diedOnWave`). */
+export function recordStageLoss(diff: Difficulty, stageIndex: number, diedOnWave: number) {
+  const cleared = Math.max(0, Math.min(9, diedOnWave - 1));
+  if (cleared <= 0) return;
+  const p = readProgress();
+  const prev = p.byDiff[diff].waves[stageIndex] ?? 0;
+  if (cleared > prev) {
+    p.byDiff[diff].waves[stageIndex] = cleared;
+    writeProgress(p);
   }
 }
 
 export function unlockStage(index: number): number {
-  const n = Math.max(getUnlocked(), index);
-  try {
-    localStorage.setItem(STAGE_KEY, String(n));
-  } catch {
-    /* ignore */
-  }
-  return n;
+  return setUnlockedFor(getDifficulty(), index);
+}
+
+export function unlockStageFor(diff: Difficulty, index: number): number {
+  return setUnlockedFor(diff, index);
 }
 
 export function getDifficulty(): Difficulty {

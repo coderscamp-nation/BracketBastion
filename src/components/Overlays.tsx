@@ -68,10 +68,13 @@ export function StartScreen({
   onMusic,
   onInfo,
   onStart,
+  wavesBeat,
 }: {
   scores: ScoreEntry[];
   stage: number;
   unlocked: number;
+  /** Waves fully cleared on this stage (0–10), from local cache. */
+  wavesBeat: number;
   musicOn: boolean;
   diff: Difficulty;
   onStage: (index: number) => void;
@@ -113,6 +116,13 @@ export function StartScreen({
                   <div className="stage-body" aria-live="polite">
                     <div className="stage-kicker">STAGE {pad2(stage + 1)}</div>
                     <div className="stage-title">{def.name}</div>
+                    {wavesBeat > 0 && (
+                      <div className="stage-waves" aria-label={`${wavesBeat} of 10 waves cleared on this stage`}>
+                        {Array.from({ length: 10 }, (_, i) => (
+                          <span key={i} className={cn('stage-wave-pip', i < wavesBeat && 'is-done', i === wavesBeat && wavesBeat < 10 && 'is-next')} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
