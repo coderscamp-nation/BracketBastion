@@ -55,8 +55,8 @@ export interface DifficultyDef {
 
 export const DIFFS: Record<Difficulty, DifficultyDef> = {
   easy: { name: 'EASY', bracket: '10% bracket', hp: 0.8, gold: 40, score: 0.75 },
-  normal: { name: 'NORMAL', bracket: '22% bracket', hp: 1, gold: 0, score: 1 },
-  hard: { name: 'HARD', bracket: '37% bracket', hp: 1.1, gold: 0, score: 1.5 },
+  normal: { name: 'NORMAL', bracket: '22% bracket', hp: 1.14, gold: 0, score: 1 },
+  hard: { name: 'HARD', bracket: '37% bracket', hp: 1.32, gold: 0, score: 1.5 },
 };
 
 /** One-line description of what a difficulty changes, built from the numbers above. */
