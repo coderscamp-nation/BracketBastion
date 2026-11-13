@@ -638,7 +638,21 @@ const EXTRA_TUNES: Tune[] = [
   variantTune(BASE_TUNES[11], -7, 0),
 ];
 
-const TUNES: Tune[] = [...BASE_TUNES, ...EXTRA_TUNES];
+/** Acts 21–30. */
+const EXTRA_TUNES_LATE: Tune[] = [
+  variantTune(BASE_TUNES[4], 3, 3),
+  variantTune(BASE_TUNES[7], -4, 2),
+  variantTune(BASE_TUNES[10], 6, 1),
+  variantTune(BASE_TUNES[3], -2, 4),
+  variantTune(BASE_TUNES[9], 4, 2),
+  variantTune(BASE_TUNES[5], -6, 3),
+  variantTune(BASE_TUNES[8], 2, 1),
+  variantTune(BASE_TUNES[11], -3, 2),
+  variantTune(BASE_TUNES[1], 5, 3),
+  variantTune(BASE_TUNES[6], -8, 0),
+];
+
+const TUNES: Tune[] = [...BASE_TUNES, ...EXTRA_TUNES, ...EXTRA_TUNES_LATE];
 
 class Music {
   enabled = true;

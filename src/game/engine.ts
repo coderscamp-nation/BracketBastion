@@ -487,7 +487,7 @@ export class Engine {
     if (t.level >= cap) {
       if (t.level < def.levels.length - 1) {
         const nextLv = t.level + 2;
-        const needStage = nextLv <= 3 ? 1 : nextLv === 4 ? 3 : 5;
+        const needStage = nextLv <= 3 ? 1 : nextLv === 4 ? 3 : nextLv === 5 ? 5 : 21;
         this.floater(t.cx + 0.5, t.cy + 0.4, `LV ${nextLv} · STAGE ${needStage}+`, GREY, 0.22, 1.0);
       }
       this.sfx('deny');

@@ -94,11 +94,12 @@ export const TEST_CAMPAIGN_PERKS: CampaignPerk[] = ['liquidity', 'shelter', 'wil
 
 /** Highest tower level index (0-based) allowed on this stage — display level is index + 1. */
 export function maxTowerLevel(stageIndex: number): number {
-  if (TEST_UNLOCK_ALL) return 4;
+  if (TEST_UNLOCK_ALL) return 5;
   const stageNo = stageIndex + 1;
   if (stageNo < 3) return 2;
   if (stageNo < 5) return 3;
-  return 4;
+  if (stageNo < 21) return 4;
+  return 5;
 }
 
 /** Highest 0-based stage index selectable on the title screen. */
@@ -108,7 +109,7 @@ export function maxUnlockedStageIndex(): number {
 }
 
 /** 0-based stage indices where the player picks a campaign perk before filing. */
-export const PERK_STAGE_INDICES = [9, 19] as const;
+export const PERK_STAGE_INDICES = [9, 19, 29] as const;
 
 export function isPerkStage(stageIndex: number): boolean {
   return (PERK_STAGE_INDICES as readonly number[]).includes(stageIndex);
@@ -152,6 +153,7 @@ export const TOWERS: Record<TowerType, TowerDef> = {
       { cost: 95, range: 2.6, rate: 0.17, dmg: 16 },
       { cost: 165, range: 2.85, rate: 0.15, dmg: 24 },
       { cost: 220, range: 3.1, rate: 0.13, dmg: 34 },
+      { cost: 300, range: 3.35, rate: 0.11, dmg: 42 },
     ],
   },
   ev: {
@@ -166,6 +168,7 @@ export const TOWERS: Record<TowerType, TowerDef> = {
       { cost: 150, range: 3.8, rate: 1.0, dmg: 60, chain: 5 },
       { cost: 195, range: 4.1, rate: 0.9, dmg: 82, chain: 6 },
       { cost: 260, range: 4.4, rate: 0.82, dmg: 110, chain: 8 },
+      { cost: 345, range: 4.7, rate: 0.74, dmg: 132, chain: 10 },
     ],
   },
   silo: {
@@ -180,6 +183,7 @@ export const TOWERS: Record<TowerType, TowerDef> = {
       { cost: 140, range: 2.8, rate: 1.8, chunk: 210 },
       { cost: 185, range: 3.05, rate: 1.55, chunk: 290 },
       { cost: 245, range: 3.3, rate: 1.35, chunk: 380 },
+      { cost: 325, range: 3.55, rate: 1.15, chunk: 465 },
     ],
   },
   hsa: {
@@ -194,6 +198,7 @@ export const TOWERS: Record<TowerType, TowerDef> = {
       { cost: 110, range: 2.5, rate: 0.12, slow: 0.55 },
       { cost: 150, range: 2.75, rate: 0.1, slow: 0.62 },
       { cost: 200, range: 3.0, rate: 0.085, slow: 0.7 },
+      { cost: 270, range: 3.25, rate: 0.07, slow: 0.76 },
     ],
   },
   charity: {
@@ -208,6 +213,7 @@ export const TOWERS: Record<TowerType, TowerDef> = {
       { cost: 120, range: 2.5, rate: 2.4, knock: 6.5, donate: 9, vp: 500, cut: 0.2 },
       { cost: 160, range: 2.75, rate: 2.1, knock: 7.5, donate: 11, vp: 700, cut: 0.24 },
       { cost: 210, range: 3.0, rate: 1.85, knock: 8.5, donate: 13, vp: 950, cut: 0.28 },
+      { cost: 280, range: 3.25, rate: 1.62, knock: 9.5, donate: 16, vp: 1250, cut: 0.32 },
     ],
   },
 };
@@ -262,6 +268,8 @@ const TIER_SPAWNS: { fromStage: number; type: EnemyType; count: number; gap: num
   { fromStage: 7, type: 'amt', count: 2, gap: 1.25 },
   { fromStage: 10, type: 'gift', count: 3, gap: 1.0 },
   { fromStage: 13, type: 'levy', count: 1, gap: 5.5 },
+  { fromStage: 21, type: 'levy', count: 2, gap: 4.8 },
+  { fromStage: 24, type: 'top', count: 1, gap: 5.0 },
 ];
 
 export interface WaveGroup {
@@ -451,6 +459,14 @@ export const RISK = [
   'CONTEMPT',
   'SEIZURE',
   'ABSOLUTE',
+  'ULTRA',
+  'BEYOND',
+  'APEX',
+  'OMEGA',
+  'TERMINAL',
+  'SINGULAR',
+  'APEX II',
+  'ZERO HOUR',
 ];
 
 /** Shared tail of the two Audit Junction lanes. */
@@ -1067,7 +1083,7 @@ export const STAGES: StageDef[] = [
   },
   {
     name: 'APRIL INFINITE',
-    blurb: 'Three merges, one gate. Final stage.',
+    blurb: 'Three merges, one gate.',
     paths: [
       [[-1, 1], [4, 1], [4, 4], ...NET],
       [[-1, 4], [4, 4], ...NET],
@@ -1087,6 +1103,301 @@ export const STAGES: StageDef[] = [
       deep: '16 6 8',
       chip: '58 18 24',
       hover: '88 28 38',
+    },
+  },
+  {
+    name: 'CAPITAL GAUNTLET',
+    blurb: 'Twin short lanes — overlap both.',
+    paths: [
+      [
+        [-1, 1],
+        [3, 1],
+        [3, 6],
+        [8, 6],
+        [13, 6],
+      ],
+      [
+        [-1, 5],
+        [5, 5],
+        [5, 2],
+        [10, 2],
+        [13, 2],
+      ],
+    ],
+    castleRow: 4,
+    starter: [2, 4],
+    hp: 1,
+    speed: 1,
+    gold: 265,
+    theme: {
+      paper: '#281a10',
+      glow: '#5c3a18',
+      path: '#181008',
+      plate: 'rgba(20,12,6,0.93)',
+      line: '255,210,170',
+      deep: '28 18 8',
+      chip: '78 48 24',
+      hover: '108 68 34',
+    },
+  },
+  {
+    name: 'SCHEDULE K KNOT',
+    blurb: 'Tight zigzag, little time to react.',
+    paths: [
+      [
+        [-1, 3],
+        [2, 3],
+        [2, 0],
+        [5, 0],
+        [5, 6],
+        [8, 6],
+        [8, 1],
+        [13, 1],
+      ],
+    ],
+    castleRow: 1,
+    starter: [3, 4],
+    hp: 1,
+    speed: 1,
+    gold: 270,
+    theme: {
+      paper: '#141428',
+      glow: '#2a2a58',
+      path: '#0c0c1a',
+      plate: 'rgba(10,10,22,0.93)',
+      line: '200,200,255',
+      deep: '14 14 32',
+      chip: '44 44 90',
+      hover: '64 64 128',
+    },
+  },
+  {
+    name: 'DEPRECIATION DOCK',
+    blurb: 'Three lanes, one dock.',
+    paths: [
+      [[-1, 0], [3, 0], [3, 4], ...SQUEEZE],
+      [[-1, 4], [3, 4], ...SQUEEZE],
+      [[-1, 7], [3, 7], [3, 4], ...SQUEEZE],
+    ],
+    castleRow: 6,
+    starter: [5, 3],
+    hp: 1,
+    speed: 1,
+    gold: 275,
+    theme: {
+      paper: '#182018',
+      glow: '#305030',
+      path: '#101410',
+      plate: 'rgba(12,16,12,0.93)',
+      line: '190,240,190',
+      deep: '14 28 14',
+      chip: '38 76 38',
+      hover: '54 108 54',
+    },
+  },
+  {
+    name: 'EXPAT EXCHANGE',
+    blurb: 'Compressed loop — outer ring rush.',
+    paths: [
+      [
+        [-1, 4],
+        [2, 4],
+        [2, 1],
+        [6, 1],
+        [6, 6],
+        [10, 6],
+        [10, 3],
+        [13, 3],
+      ],
+    ],
+    castleRow: 3,
+    starter: [4, 4],
+    hp: 1,
+    speed: 1,
+    gold: 280,
+    theme: {
+      paper: '#1a1028',
+      glow: '#3a2060',
+      path: '#100818',
+      plate: 'rgba(12,8,20,0.93)',
+      line: '220,190,255',
+      deep: '20 12 34',
+      chip: '56 34 92',
+      hover: '78 48 128',
+    },
+  },
+  {
+    name: 'TRUST TRIAD',
+    blurb: 'Three quick merges.',
+    paths: [
+      [[-1, 1], [4, 1], [4, 4], ...NET],
+      [[-1, 4], [4, 4], ...NET],
+      [[-1, 7], [4, 7], [4, 4], ...NET],
+    ],
+    castleRow: 6,
+    starter: [6, 2],
+    hp: 1,
+    speed: 1,
+    gold: 285,
+    theme: {
+      paper: '#281018',
+      glow: '#582838',
+      path: '#18080c',
+      plate: 'rgba(22,8,12,0.93)',
+      line: '255,180,200',
+      deep: '30 10 14',
+      chip: '84 28 38',
+      hover: '118 40 54',
+    },
+  },
+  {
+    name: 'BONUS BASIS',
+    blurb: 'Short sprint to the gate.',
+    paths: [
+      [
+        [-1, 2],
+        [4, 2],
+        [4, 5],
+        [7, 5],
+        [13, 5],
+      ],
+    ],
+    castleRow: 5,
+    starter: [2, 3],
+    hp: 1,
+    speed: 1,
+    gold: 290,
+    theme: {
+      paper: '#102830',
+      glow: '#205868',
+      path: '#081820',
+      plate: 'rgba(6,18,24,0.93)',
+      line: '170,230,255',
+      deep: '10 30 38',
+      chip: '28 72 98',
+      hover: '40 104 138',
+    },
+  },
+  {
+    name: 'CARRYFORWARD CROSS',
+    blurb: 'Lanes cross late — hold center.',
+    paths: [
+      [
+        [-1, 1],
+        [7, 1],
+        [7, 6],
+        [13, 6],
+      ],
+      [
+        [-1, 6],
+        [6, 6],
+        [6, 1],
+        [13, 1],
+      ],
+    ],
+    castleRow: 3,
+    starter: [4, 4],
+    hp: 1,
+    speed: 1,
+    gold: 295,
+    theme: {
+      paper: '#201818',
+      glow: '#483030',
+      path: '#140c0c',
+      plate: 'rgba(16,10,10,0.93)',
+      line: '255,200,180',
+      deep: '24 14 14',
+      chip: '68 38 34',
+      hover: '94 52 46',
+    },
+  },
+  {
+    name: 'INSTALLMENT RAIL',
+    blurb: 'Dual stairs — both climbs.',
+    paths: [
+      [
+        [-1, 6],
+        [2, 6],
+        [2, 3],
+        [5, 3],
+        [5, 0],
+        [13, 0],
+      ],
+      [
+        [-1, 1],
+        [3, 1],
+        [3, 4],
+        [6, 4],
+        [6, 7],
+        [10, 7],
+        [10, 2],
+        [13, 2],
+      ],
+    ],
+    castleRow: 1,
+    starter: [4, 5],
+    hp: 1,
+    speed: 1,
+    gold: 298,
+    theme: {
+      paper: '#182028',
+      glow: '#384858',
+      path: '#101418',
+      plate: 'rgba(12,14,20,0.93)',
+      line: '200,220,240',
+      deep: '16 22 30',
+      chip: '46 62 84',
+      hover: '64 88 118',
+    },
+  },
+  {
+    name: 'REVENUE REVERSAL',
+    blurb: 'Four spokes, one gate.',
+    paths: [
+      [[-1, 0], [5, 0], [5, 4], [8, 4], [13, 4]],
+      [[-1, 3], [3, 3], [3, 4], [8, 4]],
+      [[-1, 6], [5, 6], [5, 4], [8, 4]],
+      [[-1, 2], [2, 2], [2, 4], [8, 4]],
+    ],
+    castleRow: 4,
+    starter: [6, 2],
+    hp: 1,
+    speed: 1,
+    gold: 300,
+    theme: {
+      paper: '#201020',
+      glow: '#502850',
+      path: '#140814',
+      plate: 'rgba(16,8,16,0.93)',
+      line: '255,170,255',
+      deep: '28 10 28',
+      chip: '76 34 76',
+      hover: '108 48 108',
+    },
+  },
+  {
+    name: 'STATUTE CLOSURE',
+    blurb: 'Four merges. Campaign finale.',
+    paths: [
+      [[-1, 1], [3, 1], [3, 4], ...NET],
+      [[-1, 4], [3, 4], ...NET],
+      [[-1, 7], [3, 7], [3, 4], ...NET],
+      [[7, -1], [7, 4], ...NET],
+    ],
+    castleRow: 6,
+    starter: [5, 2],
+    hp: 1,
+    speed: 1,
+    gold: 310,
+    theme: {
+      paper: '#080810',
+      glow: '#28283a',
+      path: '#040408',
+      plate: 'rgba(4,4,8,0.95)',
+      line: '255,220,120',
+      deep: '8 8 18',
+      chip: '28 28 48',
+      hover: '42 42 78',
     },
   },
 ];
@@ -1122,6 +1433,7 @@ for (let i = 0; i < STAGES.length; i++) {
   const layout = Math.max(0, 25 - len) * 0.01 + (lanes - 1) * 0.038;
   def.hp = 0.88 + t * 1.02 + layout;
   def.speed = 1 + t * 0.23 + (lanes - 1) * 0.012;
+  if (i >= 20) def.gold = 260 + Math.min(9, i - 20) * 6;
 }
 
 // ── Layout (compiled once per stage) ──────────────────────────
